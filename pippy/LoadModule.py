@@ -20,7 +20,25 @@ def load_checkpoint(
     device: torch.device = None,
     dtype: torch.dtype = None,
     checkpoint_prefix: str = None,
-):
+) -> nn.Module:
+    """
+    Load a checkpoint from a model file.
+
+    Args:
+        model: the model to load the checkpoint into
+        index_filename: path to the checkpoint's index (metadata file)
+        device: the device on which to load the checkpoint
+        dtype: the dtype on which to load the checkpoint
+        checkpoint_prefix: the prefix of the checkpoint to load
+
+    Returns:
+        The loaded checkpoint model
+
+    Example:
+        ```
+        checkpoint = load_checkpoint(model, index_filename, device, dtype)
+        ```
+    """
     checkpoint_folder = os.path.split(index_filename)[0]
     with open(index_filename, "r") as f:
         index = json.loads(f.read())
@@ -68,9 +86,23 @@ def load_checkpoint(
 
 def _get_file_to_weight_map(
     model: nn.Module,
-    index,
+    index: Dict[str, str],
     prefix_to_test: List[str],
 ) -> Dict[str, List[Tuple]]:
+    """
+    A helper function to create a mapping from binary checkpoint filename to parameter names
+
+    Args:
+        model (`torch.nn.Module`): The model to load weights from
+        index (`Dict[str, str]`): The checkpoint index mapping parameter name to binary checkpoint filename
+        prefix_to_test (`List[str]`): prefix to try if direct match is not found
+
+    Returns:
+        `Dict[str, List[Tuple]]`: A mapping from binary checkpoint filename to list of tuples of parameter names
+
+    Raises:
+        RuntimeError: if a parameter name is not found in the checkpoint index
+    """
     file_to_weights: Dict[str, List[Tuple]] = {}
 
     for iterator in [
